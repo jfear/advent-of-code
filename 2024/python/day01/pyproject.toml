@@ -1,0 +1,11 @@
+[project]
+name = "day01"
+version = "0.1.0"
+description = "Day 01"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,0 +1,21 @@
+[project]
+name = "aoc-2024"
+version = "0.1.0"
+description = "Advent of Calendar 2024 - python soultions"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas>=2.2.3",
+]
+
+[tool.uv.workspace]
+members = ["day*"]
+
+[dependency-groups]
+lint = [
+    "ruff>=0.8.1",
+]
+dev = [
+    "pytest>=8.3.4",
+]
+
