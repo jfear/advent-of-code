@@ -2,7 +2,6 @@ from day01.part1 import part1
 
 
 def test_part1():
-    assert True
     input = """3   4
 4   3
 2   5
