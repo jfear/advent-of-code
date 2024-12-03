@@ -1,11 +1,15 @@
+use miette::miette;
 use std::io::{self, Write};
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     let input = include_str!("../../../input_day02.txt");
-    writeln!(io::stdout(), "Part1: {}", part1(&input)?)?;
-    writeln!(io::stdout(), "Part2: {}", part2(&input)?)?;
+
+    writeln!(io::stdout(), "Part1: {}", part1(&input)?)
+        .map_err(|e| miette!("failed to write {}", e))?;
+
+    writeln!(io::stdout(), "Part2: {}", part2(&input)?)
+        .map_err(|e| miette!("failed to write {}", e))?;
+
     Ok(())
 }
 
@@ -15,7 +19,7 @@ enum Direction {
     Decending,
 }
 
-fn part1(input: &str) -> Result<String> {
+fn part1(input: &str) -> miette::Result<String> {
     let mut safe_cnt = 0;
     for line in input.lines() {
         let levels: Vec<Option<i32>> = line
@@ -27,7 +31,7 @@ fn part1(input: &str) -> Result<String> {
     return Ok(safe_cnt.to_string());
 }
 
-fn part2(input: &str) -> Result<String> {
+fn part2(input: &str) -> miette::Result<String> {
     let mut safe_cnt = 0;
     for line in input.lines() {
         let levels: Vec<Option<i32>> = line
@@ -107,7 +111,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() -> Result<()> {
+    fn test_part1() -> miette::Result<()> {
         let input = "7 6 4 2 1
 1 2 7 8 9
 9 7 6 2 1
@@ -120,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn test_part2() -> Result<()> {
+    fn test_part2() -> miette::Result<()> {
         let input = "7 6 4 2 1
 1 2 7 8 9
 9 7 6 2 1
