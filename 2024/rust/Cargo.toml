@@ -3,4 +3,17 @@ members = ['day*']
 resolver = "2"
 
 [workspace.dependencies]
-
+divan = "0.1.7"
+glam = "0.29.2"
+itertools = "0.13.0"
+miette = { version = "7.4.0", features = ["fancy"] }
+rayon = "1.10.0"
+regex = "1.11.1"
+rstest = "0.23.0"
+rstest_reuse = "0.7.0"
+test-log = { version = "0.2.13", default-features = false, features = [
+  "trace",
+] }
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.18", features = ["fmt", "env-filter"] }
+winnow = "0.6.20"
