@@ -1,19 +1,20 @@
+use miette::miette;
 use std::{
     collections::HashMap,
     io::{self, Write},
 };
 
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     let input = include_str!("../input.txt");
 
-    writeln!(io::stdout(), "Part1: {}", part1(&input)?)?;
-    writeln!(io::stdout(), "Part2: {}", part2(&input)?)?;
+    writeln!(io::stdout(), "Part1: {}", part1(&input)?)
+        .map_err(|e| miette!("failed to write {}", e))?;
+    writeln!(io::stdout(), "Part2: {}", part2(&input)?)
+        .map_err(|e| miette!("failed to write {}", e))?;
     Ok(())
 }
 
-fn part1(input: &str) -> Result<String> {
+fn part1(input: &str) -> miette::Result<String> {
     let mut left = vec![];
     let mut right = vec![];
 
@@ -35,7 +36,7 @@ fn part1(input: &str) -> Result<String> {
     Ok(diffs.to_string())
 }
 
-fn part2(input: &str) -> Result<String> {
+fn part2(input: &str) -> miette::Result<String> {
     let mut left = vec![];
     let mut right: HashMap<&str, i32> = HashMap::new();
 
@@ -61,7 +62,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() -> Result<()> {
+    fn test_part1() -> miette::Result<()> {
         let input = "3   4
 4   3
 2   5
@@ -74,7 +75,7 @@ mod tests {
     }
 
     #[test]
-    fn test_part2() -> Result<()> {
+    fn test_part2() -> miette::Result<()> {
         let input = "3   4
 4   3
 2   5
