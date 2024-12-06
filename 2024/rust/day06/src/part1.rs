@@ -1,42 +1,49 @@
 use std::collections::HashSet;
 
 use glam::IVec2;
-use miette::Context;
 
 #[tracing::instrument]
-pub fn process(input: &mut &str) -> miette::Result<String> {
-    let (n_rows, n_cols, guard, objects) = parse(input).context("Could not parse input")?;
+pub fn process(input: &str) -> miette::Result<String> {
+    let parsed = parse(input);
+    let n_cols = parsed.iter().map(|p| p.0.x).max().unwrap();
+    let n_rows = parsed.iter().map(|p| p.0.y).max().unwrap();
 
-    let n_rows = n_rows as i32;
-    let n_cols = n_cols as i32;
+    let walls = parsed
+        .iter()
+        .filter(|p| p.1 == '#')
+        .map(|p| p.0)
+        .collect::<HashSet<IVec2>>();
 
-    let mut guard = guard.clone();
-    let mut visited = HashSet::new();
-    visited.insert(guard.position.clone());
+    let mut direction = Direction::Up;
+    let mut guard = parsed
+        .iter()
+        .filter(|p| p.1 == '^')
+        .map(|p| p.0)
+        .last()
+        .unwrap();
 
+    let mut visited = HashSet::from([guard.clone()]);
     loop {
-        let next = guard.peek();
+        let peek = guard + direction.step();
 
-        if objects.contains(&next) {
-            guard.turn_right();
+        if walls.contains(&peek) {
+            direction = direction.turn_right();
             continue;
         }
 
-        if next.x == -1 || next.x > n_rows {
+        guard += direction.step();
+
+        if !(0..=n_cols).contains(&guard.x) || !(0..=n_rows).contains(&guard.y) {
             break;
         }
 
-        if next.y == -1 || next.y > n_cols {
-            break;
-        }
-
-        guard.step();
-        visited.insert(guard.position.clone());
+        visited.insert(guard.clone());
     }
+
     Ok(visited.len().to_string())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 enum Direction {
     Up,
     Down,
@@ -44,21 +51,9 @@ enum Direction {
     Right,
 }
 
-impl Default for Direction {
-    fn default() -> Self {
-        Direction::Up
-    }
-}
-
-#[derive(Default, Debug, Clone)]
-struct Guard {
-    position: IVec2,
-    direction: Direction,
-}
-
-impl Guard {
-    fn turn_right(&mut self) {
-        self.direction = match self.direction {
+impl Direction {
+    fn turn_right(&self) -> Self {
+        match self {
             Direction::Up => Direction::Right,
             Direction::Right => Direction::Down,
             Direction::Down => Direction::Left,
@@ -66,59 +61,26 @@ impl Guard {
         }
     }
 
-    fn peek(&mut self) -> IVec2 {
-        match self.direction {
-            Direction::Up => IVec2::new(self.position.x - 1, self.position.y),
-            Direction::Right => IVec2::new(self.position.x, self.position.y + 1),
-            Direction::Down => IVec2::new(self.position.x + 1, self.position.y),
-            Direction::Left => IVec2::new(self.position.x, self.position.y - 1),
-        }
-    }
-
-    fn step(&mut self) {
-        match self.direction {
-            Direction::Up => self.position.x -= 1,
-            Direction::Right => self.position.y += 1,
-            Direction::Down => self.position.x += 1,
-            Direction::Left => self.position.y -= 1,
+    fn step(&self) -> IVec2 {
+        match self {
+            Direction::Up => IVec2::NEG_Y,
+            Direction::Right => IVec2::X,
+            Direction::Down => IVec2::Y,
+            Direction::Left => IVec2::NEG_X,
         }
     }
 }
 
-fn parse(input: &mut &str) -> miette::Result<(usize, usize, Guard, Vec<IVec2>)> {
-    let mut objects: Vec<IVec2> = Vec::new();
-    let mut guard = Guard::default();
-    let mut n_rows = 0;
-    let mut n_cols = 0;
-
-    for (i, line) in input.lines().enumerate() {
-        n_rows = i;
-        for (j, c) in line.chars().enumerate() {
-            n_cols = j;
-            match c {
-                '#' => objects.push(IVec2::new(i as i32, j as i32)),
-                '<' => {
-                    guard.position = IVec2::new(i as i32, j as i32);
-                    guard.direction = Direction::Left;
-                }
-                '^' => {
-                    guard.position = IVec2::new(i as i32, j as i32);
-                    guard.direction = Direction::Up;
-                }
-                '>' => {
-                    guard.position = IVec2::new(i as i32, j as i32);
-                    guard.direction = Direction::Right;
-                }
-                'v' => {
-                    guard.position = IVec2::new(i as i32, j as i32);
-                    guard.direction = Direction::Down;
-                }
-                _ => {}
-            }
-        }
-    }
-
-    Ok((n_rows, n_cols, guard, objects))
+fn parse(input: &str) -> Vec<(IVec2, char)> {
+    input
+        .lines()
+        .enumerate()
+        .flat_map(|(r, l)| {
+            l.chars()
+                .enumerate()
+                .map(move |(c, v)| (IVec2::new(c.clone() as i32, r.clone() as i32), v.to_owned()))
+        })
+        .collect()
 }
 
 #[cfg(test)]
