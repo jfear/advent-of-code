@@ -35,6 +35,7 @@ pub fn process(input: &str) -> miette::Result<String> {
         .collect::<Vec<Sector>>();
 
     let mut defrag = disk.clone();
+
     for sector in disk.iter().rev() {
         match sector.stype {
             SectorType::Free => {}
@@ -75,19 +76,21 @@ pub fn process(input: &str) -> miette::Result<String> {
         }
     }
 
-    let mut checksum = (0, 0);
+    let mut checksum = (0u64, 0u64);
+
     defrag.iter().fold(&mut checksum, |acc, s| {
         match s.stype {
-            SectorType::Free => acc.0 += s.size,
+            SectorType::Free => acc.0 += s.size as u64,
             SectorType::File => {
                 for _ in 0..s.size {
-                    acc.1 += acc.0 * s.name;
+                    acc.1 += acc.0 * s.name as u64;
                     acc.0 += 1;
                 }
             }
         }
         acc
     });
+
     Ok(checksum.1.to_string())
 }
 
