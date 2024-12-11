@@ -1,31 +1,47 @@
+use std::collections::HashMap;
+
 #[tracing::instrument]
-pub fn process(input: &str) -> miette::Result<String> {
-    let mut stones = input
+pub fn process(input: &str, blinks: u32) -> miette::Result<String> {
+    let mut stones: HashMap<u64, u64> = HashMap::new();
+    for stone in input
         .split_ascii_whitespace()
         .map(|d| d.parse::<u64>().unwrap())
-        .collect::<Vec<u64>>();
-
-    for _blink in 0..75 {
-        stones = stones
-            .into_iter()
-            .flat_map(|stone| {
-                let mut res = Vec::new();
-                match stone {
-                    0 => res.push(1),
-                    _ => match stone.ilog10() + 1 {
-                        s if s % 2 == 0 => res.extend([
-                            stone / 10i32.pow(s / 2) as u64,
-                            stone % 10i32.pow(s / 2) as u64,
-                        ]),
-                        _ => res.push(stone * 2024),
-                    },
-                }
-                res
-            })
-            .collect::<Vec<u64>>();
+    {
+        stones.entry(stone).and_modify(|v| *v += 1).or_insert(1);
     }
 
-    Ok(stones.len().to_string())
+    for _blink in 0..blinks {
+        let mut new_stones = HashMap::new();
+        for (stone, cnt) in stones {
+            match stone {
+                0 => new_stones.entry(1).and_modify(|v| *v += cnt).or_insert(cnt),
+                n => match n.ilog10() + 1 {
+                    // If has an even number of digits
+                    s if s % 2 == 0 => {
+                        let left = n / 10u64.pow(s / 2);
+                        new_stones
+                            .entry(left)
+                            .and_modify(|v| *v += cnt)
+                            .or_insert(cnt);
+
+                        let right = n % 10u64.pow(s / 2);
+                        new_stones
+                            .entry(right)
+                            .and_modify(|v| *v += cnt)
+                            .or_insert(cnt)
+                    }
+                    _ => new_stones
+                        .entry(n * 2024)
+                        .and_modify(|v| *v += cnt)
+                        .or_insert(cnt),
+                },
+            };
+        }
+
+        stones = new_stones.clone();
+    }
+
+    Ok(stones.values().sum::<u64>().to_string())
 }
 
 #[cfg(test)]
@@ -34,8 +50,8 @@ mod tests {
 
     #[test]
     fn test_process() -> miette::Result<()> {
-        let mut input = "125 17";
-        assert_eq!("55312", process(&mut input)?);
+        let input = "125 17";
+        assert_eq!("55312", process(input, 25)?);
         Ok(())
     }
 }
