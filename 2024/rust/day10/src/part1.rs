@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
 use glam::IVec2;
-use itertools::Itertools;
 
 const DIRECTION: [IVec2; 4] = [IVec2::NEG_X, IVec2::X, IVec2::NEG_Y, IVec2::Y];
 
