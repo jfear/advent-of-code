@@ -1,46 +1,31 @@
-use miette::miette;
-use winnow::{
-    ascii::{digit1, space1},
-    combinator::separated,
-    Parser,
-};
-
 #[tracing::instrument]
-pub fn process(input: &mut &str) -> miette::Result<String> {
-    let mut stones = parse(input)
-        .map_err(|e| miette!("failed to parse {}", e))?
-        .iter()
-        .map(|s| s.to_string())
-        .collect::<Vec<String>>();
+pub fn process(input: &str) -> miette::Result<String> {
+    let mut stones = input
+        .split_ascii_whitespace()
+        .map(|d| d.parse::<u64>().unwrap())
+        .collect::<Vec<u64>>();
 
     for _blink in 0..75 {
         stones = stones
             .into_iter()
-            .flat_map(|stone| match stone.as_str() {
-                "0" => Vec::from(["1".to_string()]),
-                s if s.len() % 2 == 0 => {
-                    let half = s.len() / 2;
-                    let s1 = s[..half].to_string();
-                    let s2 = match s[half..].trim_start_matches("0") {
-                        "" => "0",
-                        s => s,
-                    }
-                    .to_string();
-                    Vec::from([s1, s2])
+            .flat_map(|stone| {
+                let mut res = Vec::new();
+                match stone {
+                    0 => res.push(1),
+                    _ => match stone.ilog10() + 1 {
+                        s if s % 2 == 0 => res.extend([
+                            stone / 10i32.pow(s / 2) as u64,
+                            stone % 10i32.pow(s / 2) as u64,
+                        ]),
+                        _ => res.push(stone * 2024),
+                    },
                 }
-                _ => {
-                    let d = stone.parse::<u64>().unwrap();
-                    let new_d = d * 2024;
-                    Vec::from([String::from(format!("{new_d}"))])
-                }
+                res
             })
-            .collect::<Vec<String>>();
+            .collect::<Vec<u64>>();
     }
-    Ok(stones.len().to_string())
-}
 
-fn parse<'a>(input: &mut &'a str) -> winnow::PResult<Vec<&'a str>> {
-    separated(1.., digit1, space1).parse_next(input)
+    Ok(stones.len().to_string())
 }
 
 #[cfg(test)]
