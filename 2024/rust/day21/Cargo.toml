@@ -1,0 +1,25 @@
+[package]
+name = "day21"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+glam.workspace = true
+itertools.workspace = true
+miette.workspace = true
+tracing-subscriber.workspace = true
+tracing.workspace = true
+winnow.workspace = true
+pathfinding = "4.13.0"
+
+[dev-dependencies]
+divan.workspace = true
+rstest.workspace = true
+test-log.workspace = true
+
+[[bench]]
+name = "day21-bench"
+path = "benches/benchmarks.rs"
+harness = false
