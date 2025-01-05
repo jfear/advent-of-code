@@ -1,64 +1,59 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::successors};
 
 use glam::IVec2;
 use itertools::Itertools;
 
-pub const DIRECTIONS: [IVec2; 4] = [IVec2::NEG_X, IVec2::X, IVec2::NEG_Y, IVec2::Y];
+//                                      North         East      South     West
+pub const DIRECTIONS: [IVec2; 4] = [IVec2::NEG_Y, IVec2::X, IVec2::Y, IVec2::NEG_X];
 
-// multiple garden plots growing the same type of plant and touch (horizontally or vertically) form a region.
-// area of a region is the number of garden plots the region contains.
-// The perimeter is the number of sides of garden plots in the region.
-//   - A lone plot has a perimiter of 4
-// Price for a region = area * perimeter
-// Answer is sum of price over region
 #[tracing::instrument]
 pub fn process(input: &str) -> miette::Result<String> {
     let garden = parse(input);
     let mut visited_plots = Vec::new();
     let mut total_price = 0;
+
     for (plot, crop) in garden.iter() {
         if visited_plots.contains(&plot) {
             continue;
+        } else {
+            visited_plots.push(plot);
         }
-        visited_plots.push(plot);
-        let mut checked_plots = vec![plot];
-        let mut curr_plots = vec![plot];
-        let mut perimeter = 0;
-        let mut area = 1;
 
-        loop {
-            curr_plots = DIRECTIONS
+        let curr_plots = successors(Some(vec![plot]), |p| {
+            let next_vec = p
                 .iter()
-                .cartesian_product(&curr_plots)
-                .filter_map(|(dir, &loc)| match garden.get_key_value(&(loc + dir)) {
-                    Some((next_plot, next_crop)) => {
-                        if checked_plots.contains(&next_plot) {
-                            None
-                        } else if next_crop == crop {
-                            Some(next_plot)
-                        } else {
-                            perimeter += 1;
-                            None
-                        }
+                .cartesian_product(DIRECTIONS)
+                .filter_map(|(&p, dir)| match garden.get_key_value(&(p + dir)) {
+                    Some((next_plot, next_crop))
+                        if !visited_plots.contains(&next_plot) && next_crop == crop =>
+                    {
+                        visited_plots.push(next_plot);
+                        Some(next_plot)
                     }
-                    None => {
-                        perimeter += 1;
-                        None
-                    }
+                    _ => None,
                 })
-                .unique()
-                .collect_vec();
+                .collect::<Vec<_>>();
 
-            area += curr_plots.len();
-
-            if curr_plots.is_empty() {
-                total_price += area * perimeter;
-                break;
+            if next_vec.is_empty() {
+                None
+            } else {
+                Some(next_vec)
             }
+        })
+        .flatten()
+        .collect::<Vec<&IVec2>>();
 
-            checked_plots.extend(&curr_plots);
-            visited_plots.extend(&curr_plots);
-        }
+        let area = curr_plots.len();
+        let edges = DIRECTIONS
+            .iter()
+            .cartesian_product(&curr_plots)
+            .filter(|&(dir1, &curr_plot)| {
+                let d1 = dir1 + curr_plot;
+                !curr_plots.contains(&&d1)
+            })
+            .count();
+
+        total_price += area * edges;
     }
 
     Ok(total_price.to_string())
