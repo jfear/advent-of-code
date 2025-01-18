@@ -1,9 +1,6 @@
-use std::ops::{BitXor, BitXorAssign};
-
-use miette::miette;
 use winnow::{
     ascii::{dec_int, line_ending},
-    combinator::{preceded, repeat, separated, seq, terminated},
+    combinator::{preceded, separated, seq, terminated},
     Parser,
 };
 
@@ -211,7 +208,7 @@ Program: 0,1,5,4,3,0";
         assert_eq!(
             729,
             parse_register_a(&mut input)
-                .map_err(|e| miette!("could not parse register A {}", e))?
+                .map_err(|e| miette::miette!("could not parse register A {}", e))?
         );
         Ok(())
     }
@@ -222,7 +219,7 @@ Program: 0,1,5,4,3,0";
         assert_eq!(
             0,
             parse_register_b(&mut input)
-                .map_err(|e| miette!("could not parse register B {}", e))?
+                .map_err(|e| miette::miette!("could not parse register B {}", e))?
         );
         Ok(())
     }
@@ -233,7 +230,7 @@ Program: 0,1,5,4,3,0";
         assert_eq!(
             0,
             parse_register_c(&mut input)
-                .map_err(|e| miette!("could not parse register C {}", e))?
+                .map_err(|e| miette::miette!("could not parse register C {}", e))?
         );
         Ok(())
     }
@@ -243,7 +240,8 @@ Program: 0,1,5,4,3,0";
         let mut input = "Program: 0,1,5,4,3,0";
         assert_eq!(
             vec![0, 1, 5, 4, 3, 0],
-            parse_program(&mut input).map_err(|e| miette!("could not parse program {}", e))?
+            parse_program(&mut input)
+                .map_err(|e| miette::miette!("could not parse program {}", e))?
         );
         Ok(())
     }
