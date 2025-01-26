@@ -1,5 +1,4 @@
 use miette::{miette, Context};
-use std::collections::HashSet;
 
 use winnow::{
     ascii::{alpha1, line_ending},
@@ -12,16 +11,11 @@ pub fn process(input: &mut &str) -> miette::Result<String> {
     let (towels, display) =
         parse(input).map_err(|e| miette!("AoC should provide valid input {}", e))?;
 
-    let max_window = towels
-        .iter()
-        .map(|t| t.len())
-        .max()
-        .context("should be able to get length of at least 1 towel")?;
-
     let num_valid = display
         .into_iter()
         .filter(|&d| check_display(d, &towels))
         .count();
+
     Ok(num_valid.to_string())
 }
 
